@@ -63,18 +63,153 @@
  *   election.castVote("V1", "C1", r => "voted!", e => "error: " + e);
  *   // => "voted!"
  */
-export function createElection(candidates) {
-  // Your code here
+/**
+ * 1. createElection(candidates)
+ * Implements closures, callbacks, higher-order functions, and private state.
+ */
+export function createElection(candidates = []) {
+  // PRIVATE STATE
+  const registeredVoters = new Set();
+  const votedVoters = new Set();
+
+  // Initialize candidates list and internal vote counts
+  const candidateList = Array.isArray(candidates)
+    ? candidates.map(c => ({ ...c }))
+    : [];
+
+  const votes = {};
+  for (const c of candidateList) {
+    votes[c.id] = 0;
+  }
+
+  return {
+    registerVoter(voter) {
+      if (!voter || typeof voter !== "object") return false;
+      if (!voter.id || !voter.name || typeof voter.age !== "number") return false;
+      if (voter.age < 18) return false;
+      if (registeredVoters.has(voter.id)) return false;
+
+      registeredVoters.add(voter.id);
+      return true;
+    },
+
+    castVote(voterId, candidateId, onSuccess, onError) {
+      const successHandler = typeof onSuccess === "function" ? onSuccess : () => {};
+      const errorHandler = typeof onError === "function" ? onError : () => {};
+
+      if (!registeredVoters.has(voterId)) {
+        return errorHandler("Voter is not registered");
+      }
+
+      if (votedVoters.has(voterId)) {
+        return errorHandler("Voter has already voted");
+      }
+
+      if (!(candidateId in votes)) {
+        return errorHandler("Candidate does not exist");
+      }
+
+      // Record vote
+      votes[candidateId] += 1;
+      votedVoters.add(voterId);
+
+      return successHandler({ voterId, candidateId });
+    },
+
+    getResults(sortFn) {
+      const results = candidateList.map(c => ({
+        id: c.id,
+        name: c.name,
+        party: c.party,
+        votes: votes[c.id] || 0
+      }));
+
+      if (typeof sortFn === "function") {
+        return results.sort(sortFn);
+      }
+
+      // Default: descending by votes
+      return results.sort((a, b) => b.votes - a.votes);
+    },
+
+    getWinner() {
+      if (votedVoters.size === 0) {
+        return null;
+      }
+
+      let topCandidate = null;
+      let maxVotes = -1;
+
+      for (const c of candidateList) {
+        const count = votes[c.id] || 0;
+        if (count > maxVotes) {
+          maxVotes = count;
+          topCandidate = { id: c.id, name: c.name, party: c.party, votes: count };
+        }
+      }
+
+      return topCandidate;
+    }
+  };
 }
 
-export function createVoteValidator(rules) {
-  // Your code here
+/**
+ * 2. createVoteValidator(rules)
+ * FACTORY FUNCTION: Returns a customized validator function.
+ */
+export function createVoteValidator(rules = {}) {
+  const minAge = rules.minAge ?? 18;
+  const requiredFields = rules.requiredFields ?? ["id", "name", "age"];
+
+  return function validate(voter) {
+    if (!voter || typeof voter !== "object") {
+      return { valid: false, reason: "Invalid voter object" };
+    }
+
+    for (const field of requiredFields) {
+      if (voter[field] === undefined || voter[field] === null || voter[field] === "") {
+        return { valid: false, reason: `Missing required field: ${field}` };
+      }
+    }
+
+    if (typeof voter.age === "number" && voter.age < minAge) {
+      return { valid: false, reason: `Voter must be at least ${minAge} years old` };
+    }
+
+    return { valid: true, reason: null };
+  };
 }
 
+/**
+ * 3. countVotesInRegions(regionTree)
+ * RECURSIVE FUNCTION: Traverses tree of nested sub-regions.
+ */
 export function countVotesInRegions(regionTree) {
-  // Your code here
+  if (!regionTree || typeof regionTree !== "object") {
+    return 0;
+  }
+
+  const currentVotes = typeof regionTree.votes === "number" ? regionTree.votes : 0;
+
+  if (!Array.isArray(regionTree.subRegions) || regionTree.subRegions.length === 0) {
+    return currentVotes;
+  }
+
+  const subRegionVotes = regionTree.subRegions.reduce((sum, sub) => {
+    return sum + countVotesInRegions(sub);
+  }, 0);
+
+  return currentVotes + subRegionVotes;
 }
 
-export function tallyPure(currentTally, candidateId) {
-  // Your code here
+/**
+ * 4. tallyPure(currentTally, candidateId)
+ * PURE FUNCTION: Returns a new object without mutating the original.
+ */
+export function tallyPure(currentTally = {}, candidateId) {
+  const currentCount = currentTally[candidateId] || 0;
+  return {
+    ...currentTally,
+    [candidateId]: currentCount + 1
+  };
 }

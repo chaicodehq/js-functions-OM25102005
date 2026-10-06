@@ -52,22 +52,83 @@
  *   isPalindrome("madam")     // => true
  *   generatePattern(3)        // => ["*", "**", "***", "**", "*"]
  */
+/**
+ * 🎨 Mehndi Pattern Maker - Recursion
+ */
+
+// 1. repeatChar(char, n)
 export function repeatChar(char, n) {
-  // Your code here
+  if (typeof char !== "string" || char.length === 0 || n <= 0) {
+    return "";
+  }
+  return char + repeatChar(char, n - 1);
 }
 
+// 2. sumNestedArray(arr)
 export function sumNestedArray(arr) {
-  // Your code here
+  if (!Array.isArray(arr) || arr.length === 0) {
+    return 0;
+  }
+
+  const [head, ...tail] = arr;
+
+  let headVal = 0;
+  if (typeof head === "number") {
+    headVal = head;
+  } else if (Array.isArray(head)) {
+    headVal = sumNestedArray(head);
+  }
+
+  return headVal + sumNestedArray(tail);
 }
 
+// 3. flattenArray(arr)
 export function flattenArray(arr) {
-  // Your code here
+  if (!Array.isArray(arr) || arr.length === 0) {
+    return [];
+  }
+
+  const [head, ...tail] = arr;
+  const flattenedHead = Array.isArray(head) ? flattenArray(head) : [head];
+
+  return [...flattenedHead, ...flattenArray(tail)];
 }
 
+// 4. isPalindrome(str)
 export function isPalindrome(str) {
-  // Your code here
+  if (typeof str !== "string") {
+    return false;
+  }
+
+  const clean = str.toLowerCase();
+
+  if (clean.length <= 1) {
+    return true;
+  }
+
+  if (clean[0] !== clean[clean.length - 1]) {
+    return false;
+  }
+
+  return isPalindrome(clean.slice(1, -1));
 }
 
+// 5. generatePattern(n)
 export function generatePattern(n) {
-  // Your code here
+  if (typeof n !== "number" || !Number.isInteger(n) || n <= 0) {
+    return [];
+  }
+
+  // Recursive builder using repeatChar instead of .repeat()
+  function buildAscending(current) {
+    if (current > n) {
+      return [];
+    }
+    return [repeatChar("*", current), ...buildAscending(current + 1)];
+  }
+
+  const ascending = buildAscending(1);
+  const descending = ascending.slice(0, -1).reverse();
+
+  return [...ascending, ...descending];
 }

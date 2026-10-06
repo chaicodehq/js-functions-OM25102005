@@ -44,14 +44,94 @@
  *   const pricer = createTicketPricer(200);
  *   pricer("gold", true)  // => 200 * 1.5 * 1.3 = 390
  */
+/**
+ * 🎬 Bollywood Scene Director - Factory Functions
+ */
+
+/**
+ * 🎬 Bollywood Scene Director - Factory Functions
+ */
+
 export function createDialogueWriter(genre) {
-  // Your code here
+  if (!genre) {
+    return null;
+  }
+
+  const templates = {
+    action: (hero, villain) =>
+      `${hero} says: 'Tujhe toh main dekh lunga, ${villain}!'`,
+    romance: (hero, villain) =>
+      `${hero} whispers: '${villain}, tum mere liye sab kuch ho'`,
+    comedy: (hero, villain) =>
+      `${hero} laughs: '${villain} bhai, kya kar rahe ho yaar!'`,
+    drama: (hero, villain) =>
+      `${hero} cries: '${villain}, tune mera sab kuch cheen liya!'`,
+  };
+
+  if (!(genre in templates)) {
+    return null;
+  }
+
+  return function (hero, villain) {
+    // Check if missing, not a string, or empty after trim
+    if (
+      !hero ||
+      !villain ||
+      typeof hero !== "string" ||
+      typeof villain !== "string" ||
+      hero.trim().length === 0 ||
+      villain.trim().length === 0
+    ) {
+      return "...";
+    }
+
+    return templates[genre](hero, villain);
+  };
 }
 
 export function createTicketPricer(basePrice) {
-  // Your code here
+  if (typeof basePrice !== "number" || Number.isNaN(basePrice) || basePrice <= 0) {
+    return null;
+  }
+
+  const multipliers = {
+    silver: 1,
+    gold: 1.5,
+    platinum: 2,
+  };
+
+  return function (seatType, isWeekend = false) {
+    if (!(seatType in multipliers)) {
+      return null;
+    }
+
+    let price = basePrice * multipliers[seatType];
+    if (isWeekend) {
+      price *= 1.3;
+    }
+
+    return Math.round(price);
+  };
 }
 
 export function createRatingCalculator(weights) {
-  // Your code here
+  // Must be an object, not null, and not an array
+  if (typeof weights !== "object" || weights === null || Array.isArray(weights)) {
+    return null;
+  }
+
+  return function (scores) {
+    if (!scores || typeof scores !== "object") {
+      return 0;
+    }
+
+    let total = 0;
+    for (const key in weights) {
+      if (key in scores && typeof scores[key] === "number") {
+        total += scores[key] * weights[key];
+      }
+    }
+
+    return Math.round(total * 10) / 10;
+  };
 }

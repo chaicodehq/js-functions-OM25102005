@@ -12,6 +12,7 @@
  *      - Agar mealType unknown hai, return null
  *      - Agar name missing/empty, return null
  *      - Return: { name, mealType, days, dailyRate, totalCost }
+ * 
  *
  *   2. combinePlans(...plans)
  *      - Rest parameter! Takes any number of plan objects
@@ -19,6 +20,7 @@
  *      - Return: { totalCustomers, totalRevenue, mealBreakdown }
  *      - mealBreakdown: { veg: count, nonveg: count, ... }
  *      - Agar koi plans nahi diye, return null
+ * 
  *
  *   3. applyAddons(plan, ...addons)
  *      - plan: { name, mealType, days, dailyRate, totalCost }
@@ -39,14 +41,77 @@
  *   combinePlans(plan1, plan2, plan3)
  *   // => { totalCustomers: 3, totalRevenue: 7200, mealBreakdown: { veg: 2, nonveg: 1 } }
  */
-export function createTiffinPlan({ name, mealType = "veg", days = 30 } = {}) {
-  // Your code here
+export function createTiffinPlan(
+  { name, mealType = "veg", days = 30 } = {}
+) {
+  if (typeof name !== "string" || name.trim().length === 0) {
+    return null;
+  }
+
+  const rates = {
+    veg: 80,
+    nonveg: 120,
+    jain: 90
+  };
+
+  if (!(mealType in rates)) {
+    return null;
+  }
+
+  const dailyRate = rates[mealType];
+  const totalCost = dailyRate * days;
+
+  return {
+    name,
+    mealType,
+    days,
+    dailyRate,
+    totalCost
+  };
 }
 
 export function combinePlans(...plans) {
-  // Your code here
+  if (plans.length === 0) {
+return null;
+}
+ const totalCustomers=plans.length;
+
+const totalRevenue= plans.reduce((acc,curr)=>{
+return acc+curr.totalCost
+ },0)
+let vegCount=0;
+let nonVegCount=0;
+const mealBreakdown = {};
+for (const plan of plans) {
+mealBreakdown[plan.mealType] =
+(mealBreakdown[plan.mealType] || 0) + 1;
+}
+
+return {totalCustomers,totalRevenue,mealBreakdown};
 }
 
 export function applyAddons(plan, ...addons) {
-  // Your code here
+ if(plan===null){
+  return null;
+ }
+ const {days,dailyRate}=plan;
+ const addonCost=addons.reduce((acc,curr)=>{
+  return acc+curr.price;
+ },0)
+
+ const newDailyRate = dailyRate + addonCost;
+ 
+const totalCost = newDailyRate * days;
+
+const addonNames = addons.map(
+(value )=>( value.name)
+);
+
+return {
+...plan,
+dailyRate: newDailyRate,
+totalCost,
+addonNames
+};
 }
+
